@@ -20,9 +20,13 @@ const transporter = nodemailer.createTransport({
 const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 
 exports.signup = async (req, res) => {
-  console.log(req.body);
 
-  const { name, email, password, passwordConfirm } = req.body;
+  const { name, email, password, passwordConfirm , role } = req.body;
+  if(!name || !email || !password || !passwordConfirm || !role) {
+    return res.status(400).send({
+      message: "Please provide all required fields",
+    });
+  }
 
   db.query(
     "select email from users where email = ?",
@@ -51,6 +55,7 @@ exports.signup = async (req, res) => {
         name: name,
         email: email,
         password: hashedPassword,
+        role: role,
       };
 
       db.query(sql, values, async (error, results) => {
@@ -92,7 +97,7 @@ exports.verifyOTP = async (req, res) => {
         });
       }
 
-      if (user.isVerified) {
+      if (user.is_verified) {
         return res.status(400).send({
           message: "User already verified",
         });
@@ -148,13 +153,12 @@ exports.resendOTP = async (req, res) => {
         message: "User not found",
       });
     }
-    if (user.isVerified) {
+    if (user.is_verified) {
       return res.status(400).send({
         message: "User already verified",
       });
     }
     if (results) {
-      const otp = generateOTP();
       await redis.set(`otp:${email}`, otp, "EX", 300);
 
       await transporter.sendMail({
@@ -166,6 +170,8 @@ exports.resendOTP = async (req, res) => {
     }
   });
 };
+
+
 
 exports.login = (req, res) => {
   try {
@@ -187,7 +193,6 @@ exports.login = (req, res) => {
           message: "User not found",
         });
       }
-
       const Match = await bcrypt.compare(password, user.password);
 
       if (!Match) {
@@ -196,15 +201,22 @@ exports.login = (req, res) => {
         });
       }
 
-      if (!user.isVerified) {
+      if (!user.is_verified) {
         return res.status(400).send({
           message: "User not verified, please verify your email",
         });
       }
-      return res.status(200).send({
-        message: "User logged in successfully",
-      });
+         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+    
+    return res.status(200).send({
+      message: "User logged in successfully",
+      token,
+    });
+
+    });
+    
   } catch (error) {
     return res.status(500).send({
       message: "Internal server error",
