@@ -5,6 +5,7 @@ const cors = require("cors");
 const authRoutes = require("./srs/routes/authRoutes");
 const aiRoutes = require("./srs/routes/aiRoutes");
 const jobRoutes = require("./srs/routes/jobRoutes");
+const userRoutes = require("./srs/routes/userRoutes");
 // const paymentRoutes = require("./srs/routes/paymentRoutes");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json()); // Parses incoming JSON requests
 
 // Mount Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/jobs", jobRoutes);
 // app.use("/api/payments", paymentRoutes);

@@ -24,6 +24,9 @@ const TalentSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   skills: [{ type: String }],
   portfolioUrl: String,
+  age: { type: Number },
+  experience: { type: Number }, // Years of experience
+  bio: { type: String },
   tokenBalance: { type: Number, default: 5 }, // ETN Token Economy
   profileVector: { type: [Number] }, // Storing AI embeddings
 });

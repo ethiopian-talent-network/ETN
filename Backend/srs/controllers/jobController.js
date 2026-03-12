@@ -4,7 +4,26 @@ const Job = require("../models/Job");
 // @route   GET /api/jobs
 exports.getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate("employerId", "companyName fullName");
+    const { skills, search } = req.query;
+    let query = {};
+    
+    // If skills query passed, filter jobs that match the talent's skills
+    if (skills) {
+      const skillsArray = skills.split(',').map(s => s.trim());
+      // Match jobs where at least one of the job's required skills is in the user's skillset
+      // Using $in on skillsRequired array
+      query.skillsRequired = { $in: skillsArray };
+    }
+
+    // If search query passed, filter by title or description
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const jobs = await Job.find(query).populate("employerId", "companyName fullName");
     res.status(200).json({ success: true, data: jobs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

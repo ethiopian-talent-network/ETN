@@ -21,14 +21,11 @@ function Login() {
       });
 
       if (response.data.token) {
-        // Save the token
         localStorage.setItem('etn_token', response.data.token);
         localStorage.setItem('etn_user', JSON.stringify({
           email: response.data.email,
           role: response.data.role
         }));
-
-        // Redirect to dashboard
         navigate('/');
       }
     } catch (err) {
@@ -39,59 +36,73 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-etnBg flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-etnIndigo to-etnViolet">
+    <div className="min-h-screen bg-etnLight text-gray-800 flex items-center justify-center p-4">
+      <div className="bg-white p-10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] w-full max-w-md border border-gray-100 relative overflow-hidden">
+        
+        {/* Subtle Decorative Accent */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-etnNavy via-etnGreen to-etnGold"></div>
+
+        <div className="text-center mb-10 mt-2">
+          <div className="w-16 h-16 bg-etnNavy text-white rounded-xl flex items-center justify-center text-3xl font-black mx-auto mb-4 shadow-lg shadow-etnNavy/30">
+            E
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">
             Welcome Back
           </h1>
-          <p className="text-gray-500 mt-2">Sign in to your ETN account</p>
+          <p className="text-gray-500 mt-2 text-sm font-medium">Log in to the Ethiopian Talent Network</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
+          <div className="bg-red-50 border border-etnRed/20 text-etnRed p-3 rounded-xl mb-6 text-sm text-center font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-etnIndigo focus:border-etnIndigo outline-none transition-colors"
-              placeholder="you@example.com"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-etnNavy focus:border-etnNavy outline-none transition-all text-gray-800 font-medium"
+                placeholder="name@example.com"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-etnIndigo focus:border-etnIndigo outline-none transition-colors"
-              placeholder="••••••••"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex justify-between">
+              Password
+              <span className="text-xs text-etnNavy cursor-pointer hover:underline font-bold">Forgot?</span>
+            </label>
+            <div className="relative">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-etnNavy focus:border-etnNavy outline-none transition-all text-gray-800 font-medium tracking-widest"
+                placeholder="••••••••"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-gradient-to-r from-etnIndigo to-etnViolet text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-70"
+            className="w-full py-3.5 bg-etnNavy hover:bg-blue-900 text-white rounded-xl font-bold transition-all shadow-md text-base"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-etnIndigo font-semibold hover:underline">
-            Register here
+        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-sm text-gray-500 font-medium">
+          New to ETN?{' '}
+          <Link to="/register" className="text-etnGreen font-bold hover:text-green-700 transition-colors hover:underline">
+            Create an Account
           </Link>
         </div>
       </div>
