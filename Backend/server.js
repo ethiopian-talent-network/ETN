@@ -1,19 +1,47 @@
-const express = require('express');
-const mysql = require("mysql2");
- const path = require('path');   
- const db = require("./config/db")
+// src/server.js
+require("dotenv").config();
+const http = require("http");
+const app = require("./app"); // must exist at app.js
+const connectDB = require("./config/db"); // must exist
+const { Server } = require("socket.io");
 
+// Connect to Database
+connectDB();
 
-const app = express();
+// Create HTTP server
+const server = http.createServer(app);
 
+// Setup WebSockets
+const io = new Server(server, { cors: { origin: "*" } });
+const Message = require("./srs/models/Message");
 
-const publicDirectory = path.join(__dirname, './public');
-app.use(express.static(publicDirectory));
-app.use(express.urlencoded({ extended: false }))
-app.use(express.json());
+io.on("connection", (socket) => {
+  console.log("⚡ A user connected via Socket.io");
 
-app.use('/auth', require('./routes/authRoutes'));
+  // User joins their personal room
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined their room`);
+  });
 
-app.listen(5000, () => {
-  console.log("Server is running on port http://localhost:5000");
+  socket.on("sendMessage", async (data) => {
+    const { sender, receiver, text } = data;
+    try {
+       // Save to DB
+       const newMessage = await Message.create({ sender, receiver, text });
+       
+       // Emit to receiver's room and sender's room
+       io.to(receiver).emit("receiveMessage", newMessage);
+       io.to(sender).emit("receiveMessage", newMessage);
+    } catch (err) {
+       console.error("Socket emit error:", err);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
