@@ -15,7 +15,6 @@ exports.register = async (req, res) => {
 
     let newUser;
     if (role === "Talent") {
-      // Process skills into an array if they are passed as a comma-separated string
       if (rest.skills && typeof rest.skills === "string") {
         rest.skills = rest.skills.split(",").map((s) => s.trim());
       }

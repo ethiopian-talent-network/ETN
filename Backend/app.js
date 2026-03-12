@@ -6,6 +6,8 @@ const authRoutes = require("./srs/routes/authRoutes");
 const aiRoutes = require("./srs/routes/aiRoutes");
 const jobRoutes = require("./srs/routes/jobRoutes");
 const userRoutes = require("./srs/routes/userRoutes");
+const networkRoutes = require("./srs/routes/networkRoutes");
+const messageRoutes = require("./srs/routes/messageRoutes");
 // const paymentRoutes = require("./srs/routes/paymentRoutes");
 
 const app = express();
@@ -19,6 +21,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/network", networkRoutes);
+app.use("/api/messages", messageRoutes);
 // app.use("/api/payments", paymentRoutes);
 
 // Global Error Handler

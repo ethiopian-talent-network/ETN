@@ -27,6 +27,13 @@ const TalentSchema = new mongoose.Schema({
   age: { type: Number },
   experience: { type: Number }, // Years of experience
   bio: { type: String },
+  location: { type: String }, // e.g. "Addis Ababa"
+  endorsements: [
+    {
+      skill: String,
+      endorserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    }
+  ],
   tokenBalance: { type: Number, default: 5 }, // ETN Token Economy
   profileVector: { type: [Number] }, // Storing AI embeddings
 });

@@ -13,11 +13,29 @@ const server = http.createServer(app);
 
 // Setup WebSockets
 const io = new Server(server, { cors: { origin: "*" } });
+const Message = require("./srs/models/Message");
+
 io.on("connection", (socket) => {
   console.log("⚡ A user connected via Socket.io");
 
-  socket.on("sendMessage", (data) => {
-    io.emit("receiveMessage", data);
+  // User joins their personal room
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined their room`);
+  });
+
+  socket.on("sendMessage", async (data) => {
+    const { sender, receiver, text } = data;
+    try {
+       // Save to DB
+       const newMessage = await Message.create({ sender, receiver, text });
+       
+       // Emit to receiver's room and sender's room
+       io.to(receiver).emit("receiveMessage", newMessage);
+       io.to(sender).emit("receiveMessage", newMessage);
+    } catch (err) {
+       console.error("Socket emit error:", err);
+    }
   });
 
   socket.on("disconnect", () => {
