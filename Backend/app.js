@@ -4,6 +4,7 @@ const cors = require("cors");
 // Import Routes
 const authRoutes = require("./srs/routes/authRoutes");
 const aiRoutes = require("./srs/routes/aiRoutes");
+const jobRoutes = require("./srs/routes/jobRoutes");
 // const paymentRoutes = require("./srs/routes/paymentRoutes");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json()); // Parses incoming JSON requests
 // Mount Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/jobs", jobRoutes);
 // app.use("/api/payments", paymentRoutes);
 
 // Global Error Handler

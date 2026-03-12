@@ -2,7 +2,7 @@
 require("dotenv").config();
 const http = require("http");
 const app = require("./app"); // must exist at app.js
-const connectDB = require("config/db"); // must exist
+const connectDB = require("./config/db"); // must exist
 const { Server } = require("socket.io");
 
 // Connect to Database
