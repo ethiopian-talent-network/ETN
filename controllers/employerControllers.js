@@ -6,13 +6,17 @@ exports.employerDashboard = async (req, res) => {
   if (!company_name || !company_discription || !location || !username) {
     return res.status(400).json({ message: "please fill required fields" });
   }
-
+  if (!req.user || !req.user.id) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
   try {
     const [rows] = await db.query("SELECT * FROM employers WHERE username = ?", [username]);
     if (rows.length > 0) {
-      return res.status(400).send({ message: "Username already exists" });
+      return res.status(400).send({ message: "employers already exists" });
     }
-
+    if (username === rows[0].username) {
+        return res.status(400).send({ message: "Username already exists" });
+    }
     const values = { company_name, company_discription, website, location, username, user_id: req.user.id };
     const [result] = await db.query("INSERT INTO employers SET ?", [values]);
 
@@ -22,8 +26,16 @@ exports.employerDashboard = async (req, res) => {
       return res.status(500).send({ message: "Failed to register employer" });
     }
   } catch (error) {
+  if(error.code === "ER_DUP_ENTRY"){
+    return res.status(400).send({ message: "Username already exists" });
+}
+
+if (error.code === "ER_NO_REFERENCED_ROW_2") {
+    return res.status(400).send({ message: "User not found" });
+}
+
     console.error(error);
-    return res.status(500).send({ message: "Internal server error", error });
+    return res.status(500).send({ message: "An unexpected error occurred while saving your profile.", error });
   }
 };
 
@@ -42,7 +54,7 @@ try{
 
 
 }catch(error){
-    return res.status(500).send({ message: "Internal server error", error });
+    return res.status(500).send({ message: "An unexpected error occurred while fetching your profile.", error });
 }
 
 
