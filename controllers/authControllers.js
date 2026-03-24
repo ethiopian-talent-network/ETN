@@ -8,7 +8,6 @@ const redis = require("../config/redis");
 
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -209,14 +208,14 @@ exports.login = (req, res) => {
          const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-    
+
     return res.status(200).send({
       message: "User logged in successfully",
       token,
     });
 
     });
-    
+
   } catch (error) {
     return res.status(500).send({
       message: "Internal server error",
