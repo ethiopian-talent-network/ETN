@@ -10,6 +10,7 @@ app.use("/user", require("./routes/userRoutes"));
 app.use("/employer", require("./routes/employerRoutes"));
 app.use("/talents", require("./routes/talentRoutes"));
 app.use("/chat", require("./routes/openaiRoute"));
+app.use("/admin", require("./routes/adminRoutes"));
 
 
 app.listen(5000, () => {
