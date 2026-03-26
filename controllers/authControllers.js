@@ -19,14 +19,21 @@ const transporter = nodemailer.createTransport({
 const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 
 exports.signup = async (req, res) => {
-
-  const { name, email, password, passwordConfirm , role } = req.body;
-  if(!name || !email || !password || !passwordConfirm || !role) {
+  const { name, email, password, passwordConfirm, selectedRole } = req.body;
+  if (!name || !email || !password || !passwordConfirm || !selectedRole) {
     return res.status(400).send({
       message: "Please provide all required fields",
     });
   }
 
+  let role;
+  if (selectedRole === "talent") {
+    role === "talent";
+  } else if (selectedRole === "employer") {
+    role === "employer";
+  } else {
+    return res.status(400).json({ message: "Please select a valid role" });
+  }
   db.query(
     "select email from users where email = ?",
     [email],
@@ -132,8 +139,6 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-
-
 exports.resendOTP = async (req, res) => {
   const { email } = req.body;
   const otp = generateOTP();
@@ -170,8 +175,6 @@ exports.resendOTP = async (req, res) => {
   });
 };
 
-
-
 exports.login = (req, res) => {
   try {
     const { email, password } = req.body;
@@ -205,17 +208,19 @@ exports.login = (req, res) => {
           message: "User not verified, please verify your email",
         });
       }
-         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+      const token = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1h",
+        },
+      );
 
-    return res.status(200).send({
-      message: "User logged in successfully",
-      token,
+      return res.status(200).send({
+        message: "User logged in successfully",
+        token,
+      });
     });
-
-    });
-
   } catch (error) {
     return res.status(500).send({
       message: "Internal server error",

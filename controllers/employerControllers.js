@@ -78,7 +78,26 @@ exports.employerProfile = async (req, res) => {
   }
 };
 
-exports.postJobs = async(req , res) => {
 
-  
+exports.categories = async(req , res) => {
+  try{
+    const sql = "select * from categories";
+
+    const [rows] = await db.query(sql)
+
+    return res.status(200).json({ message: "Categories", data: rows });
+  }catch(error){
+    return res.status(500).json({ message: "An unexpected error occurred while fetching categories.", error });
+  }
+}
+
+
+
+exports.postJobs = async(req , res) => {
+const { title, description, category_id, location, salary } = req.body;
+
+
+try{
+  const sql = 
+}
 }
