@@ -6,6 +6,7 @@ const { authorizeRole } = require("../middlewares/roleMiddleWare");
 const {
   employerProfile,
   employerDashboard,
+  categories
 } = require("../controllers/employerControllers");
 
 router.get(
@@ -20,5 +21,6 @@ router.post(
   authorizeRole("employer"),
   employerDashboard,
 );
+router.get("/categories" , categories)
 
 module.exports = router;
