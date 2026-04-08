@@ -11,6 +11,7 @@ app.use("/employer", require("./routes/employerRoutes"));
 app.use("/talents", require("./routes/talentRoutes"));
 app.use("/chat", require("./routes/openaiRoute"));
 app.use("/admin", require("./routes/adminRoutes"));
+app.use("/payment", require("./routes/paymentRoutes"));
 
 
 app.listen(5000, () => {

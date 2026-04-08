@@ -16,11 +16,19 @@ exports.employerDashboard = async (req, res) => {
       [username],
     );
     if (rows.length > 0) {
-      return res.status(400).send({ message: "employers already exists" });
+      return res.status(400).send({ message: "username already exists" });
     }
-    if (username === rows[0].username) {
-      return res.status(400).send({ message: "Username already exists" });
+
+    const [exstingEmployer] = await db.query(
+      "SELECT * FROM employers where user_id = ?",
+      [req.user.id],
+    );
+    if (exstingEmployer.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "employer profile already exist" });
     }
+
     const values = {
       company_name,
       company_discription,
@@ -48,12 +56,10 @@ exports.employerDashboard = async (req, res) => {
     }
 
     console.error(error);
-    return res
-      .status(500)
-      .send({
-        message: "An unexpected error occurred while saving your profile.",
-        error,
-      });
+    return res.status(500).send({
+      message: "An unexpected error occurred while saving your profile.",
+      error,
+    });
   }
 };
 
@@ -69,35 +75,82 @@ exports.employerProfile = async (req, res) => {
 
     return res.status(200).send({ message: "Employer profile", data: rows[0] });
   } catch (error) {
-    return res
-      .status(500)
-      .send({
-        message: "An unexpected error occurred while fetching your profile.",
-        error,
-      });
+    return res.status(500).send({
+      message: "An unexpected error occurred while fetching your profile.",
+      error,
+    });
   }
 };
 
-
-exports.categories = async(req , res) => {
-  try{
+exports.categories = async (req, res) => {
+  try {
     const sql = "select * from categories";
 
-    const [rows] = await db.query(sql)
+    const [rows] = await db.query(sql);
 
     return res.status(200).json({ message: "Categories", data: rows });
-  }catch(error){
-    return res.status(500).json({ message: "An unexpected error occurred while fetching categories.", error });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred while fetching categories.",
+      error,
+    });
   }
-}
+};
 
+exports.postJobs = async (req, res) => {
+  try {
+    const {
+      title,
+      discription,
+      salary,
+      budget_type,
+      experience_level,
+      status,
+      category_id,
+    } = req.body;
 
+    if (
+      !title ||
+      !discription ||
+      !salary ||
+      !budget_type ||
+      !experience_level ||
+      !status ||
+      !category_id
+    ) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
 
-exports.postJobs = async(req , res) => {
-const { title, description, category_id, location, salary } = req.body;
+    const [emploterRow] = await db.query(
+      "select * from employers where user_id = ?",
+      [req.user.id],
+    );
 
+    if (emploterRow.length === 0) {
+      return res.status(404).send({ message: "Employer not found" });
+    }
 
-try{
-  const sql = 
-}
-}
+    const employer_id = emploterRow[0].id;
+
+    await db.query(
+      "insert into jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        title,
+        discription,
+        salary,
+        budget_type,
+        experience_level,
+        status,
+        category_id,
+        employer_id,
+      ],
+    );
+
+    return res.status(201).send({ message: "Job posted successfully" });
+  } catch (error) {
+    return res.status(500).send({
+      message: "An unexpected error occurred while posting the job.",
+      error,
+    });
+  }
+};
