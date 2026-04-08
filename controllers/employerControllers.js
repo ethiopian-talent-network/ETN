@@ -16,11 +16,19 @@ exports.employerDashboard = async (req, res) => {
       [username],
     );
     if (rows.length > 0) {
-      return res.status(400).send({ message: "employers already exists" });
+      return res.status(400).send({ message: "username already exists" });
     }
-    if (username === rows[0].username) {
-      return res.status(400).send({ message: "Username already exists" });
+
+    const [exstingEmployer] = await db.query(
+      "SELECT * FROM employers where user_id = ?",
+      [req.user.id],
+    );
+    if (exstingEmployer.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "employer profile already exist" });
     }
+
     const values = {
       company_name,
       company_discription,
@@ -122,7 +130,7 @@ exports.postJobs = async (req, res) => {
       return res.status(404).send({ message: "Employer not found" });
     }
 
-    const [employerRow] = emploterRow[0].id;
+    const employer_id = emploterRow[0].id;
 
     await db.query(
       "insert into jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id) values (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -134,7 +142,7 @@ exports.postJobs = async (req, res) => {
         experience_level,
         status,
         category_id,
-        employerRow,
+        employer_id,
       ],
     );
 

@@ -2,8 +2,15 @@ const db = require("../config/db").promise();
 const chapa = require("./chapaServices");
 const { v4: uuidv4 } = require("uuid");
 
-exports.createPayment = async (user, job_id, currency, amount) => {
+exports.createPayment = async (user, currency, amount, job_id, method) => {
   try {
+    if (!user || !user.id) {
+      throw new Error("unathorized access");
+    }
+
+    if (!currency || !job_id || !amount) {
+      throw new Error("invalid payment");
+    }
     const tx_ref = uuidv4();
     const sql = "INSERT INTO payments set ?";
     const values = {
@@ -12,6 +19,7 @@ exports.createPayment = async (user, job_id, currency, amount) => {
       amount,
       transaction_id: tx_ref,
       currency,
+      method,
       status: "pending",
     };
     await db.query(sql, values);
@@ -19,16 +27,23 @@ exports.createPayment = async (user, job_id, currency, amount) => {
     const chapaResponse = await chapa.initializePayment({
       amount,
       currency,
+      method,
       email: user.email,
       first_name: user.company_name,
       last_name: "user",
       tx_ref,
-      callback_url: "http://localhost:5000/api/payments/verify",
+      callback_url: "http://localhost:5000/payments/verify",
       return_url: "http://localhost:3000/payment/success",
     });
-    return {
-      check_url: chapaResponse.data.data.checkout_url,
-    };
+
+    const checkout_url = chapaResponse?.data?.checkout_url;
+
+    if (!checkout_url) {
+      console.log("Chapa response:", chapaResponse);
+      throw new Error("Failed to get checkout URL from Chapa");
+    }
+
+    return { check_url: checkout_url };
   } catch (error) {
     console.log(error);
     throw error;
@@ -36,6 +51,7 @@ exports.createPayment = async (user, job_id, currency, amount) => {
 };
 
 exports.verfiyAndUpdateTransaction = async (tx_ref) => {
+  if (!tx_ref) throw new Error("invalid transaction ID");
   const result = await chapa.verifyPayment(tx_ref);
   if (result.status !== "success") {
     const sql =
@@ -49,9 +65,9 @@ exports.verfiyAndUpdateTransaction = async (tx_ref) => {
     [tx_ref],
   );
 
-  const [row] = await db.query(
+  const [rows] = await db.query(
     "select * from payments where transaction_id = ?",
     [tx_ref],
   );
-  return row[0];
+  return rows[0];
 };
