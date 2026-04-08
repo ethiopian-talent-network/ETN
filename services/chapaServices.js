@@ -6,7 +6,7 @@ const CHAPA_KEY = process.env.CHAPA_KEY;
 const initializePayment = async (data) => {
   try {
     const response = await axios.post(
-      `${CHAPA_BASE}/transaction/initialize`,
+      `${CHAPA_BASE.replace(/\/$/, "")}/transaction/initialize`,
       data,
 
       {
@@ -25,7 +25,7 @@ const initializePayment = async (data) => {
 const verifyPayment = async (tx_ref) => {
   try {
     const response = await axios.get(
-      `${CHAPA_BASE}/transaction/verify/${tx_ref}`,
+      `${CHAPA_BASE.replace(/\/$/, "")}/transaction/verify/${tx_ref}`,
       {
         headers: {
           Authorization: `Bearer ${CHAPA_KEY}`,
