@@ -28,9 +28,9 @@ exports.signup = async (req, res) => {
 
   let role;
   if (selectedRole === "talent") {
-    role === "talent";
+    role = "talent";
   } else if (selectedRole === "employer") {
-    role === "employer";
+    role = "employer";
   } else {
     return res.status(400).json({ message: "Please select a valid role" });
   }
