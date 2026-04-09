@@ -3,15 +3,31 @@ const chapa = require("./chapaServices");
 const { v4: uuidv4 } = require("uuid");
 
 exports.createPayment = async (user, currency, amount, job_id, method) => {
+  const connection = await db.getConnection();
+
   try {
     if (!user || !user.id) {
       throw new Error("unathorized access");
     }
 
-    if (!currency || !job_id || !amount) {
+    if (!currency || !job_id || !amount || !method) {
       throw new Error("invalid payment");
     }
+
+    await connection.beginTransaction();
+    const [checkHiredTalent] = await connection.query(
+      "SELECT talent_id FROM applications where jod_id = ? and status = 'accepted'",
+      [job_id],
+    );
+
+    if (checkHiredTalent.length === 0) {
+      throw new Error("No hired talent found for this application");
+    }
+
+    const talent_id = checkHiredTalent[0].talent_id;
+
     const tx_ref = uuidv4();
+
     const sql = "INSERT INTO payments set ?";
     const values = {
       job_id,
@@ -22,7 +38,12 @@ exports.createPayment = async (user, currency, amount, job_id, method) => {
       method,
       status: "pending",
     };
-    await db.query(sql, values);
+    await connection.query(sql, values);
+
+    await connection.query(
+      "INSERT INTO escrow (job_id, talent_id , employer_id , amount , currency , status , treansaction_ref) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [job_id, talent_id, user.id, amount, currency, "pending", tx_ref],
+    );
 
     const chapaResponse = await chapa.initializePayment({
       amount,
@@ -43,10 +64,15 @@ exports.createPayment = async (user, currency, amount, job_id, method) => {
       throw new Error("Failed to get checkout URL from Chapa");
     }
 
+    await connection.commit();
+
     return { check_url: checkout_url };
   } catch (error) {
     console.log(error);
+    await connection.rollback();
     throw error;
+  } finally {
+    connection.release();
   }
 };
 
