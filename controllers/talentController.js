@@ -152,7 +152,7 @@ exports.createPortifolio = async (req, res) => {
     const values = {
       title,
       description,
-      technologies,
+      technologies: JSON.stringify(technologies),
       github_url,
       image_url,
       project_url,
@@ -246,7 +246,7 @@ exports.updatePortifolio = async (req, res) => {
 exports.deletePortifolio = async (req, res) => {
   try {
     const [row] = await db.query(
-      "DELETE FROM portifolio WHERE user_id = ? and id = ?",
+      "DELETE FROM Protifolio WHERE user_id = ? and id = ?",
       [req.user.id, req.params.id],
     );
     if (!row) {
@@ -261,6 +261,54 @@ exports.deletePortifolio = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "An unexpected error occurred while deleting your portifolio.",
+      error,
+    });
+  }
+};
+
+exports.applyForJob = async (req, res) => {
+  const { cover_letter, job_id } = req.body;
+
+  try {
+    const sql = "select * from jobs where id =?";
+    const [job] = await db.query(sql, [job_id]);
+
+    if (job.length === 0) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+    const jobId = job[0];
+
+    const sql3 =
+      "select * from applications where jod_id = ? and talent_id = ?";
+    const [applicationExists] = await db.query(sql3, [jobId.id, req.user.id]);
+    if (applicationExists.length > 0) {
+      return res.status(400).json({
+        message: "You have already applied for this job",
+      });
+    }
+
+    const sql2 =
+      "insert into applications (jod_id , talent_id , cover_letter) values (? , ? , ?)";
+    const [application] = await db.query(sql2, [
+      jobId.id,
+      req.user.id,
+      cover_letter,
+    ]);
+    if (!application) {
+      return res.status(500).json({
+        message: "An unexpected error occurred while applying for the job.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Application submitted successfully",
+      data: application,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred while applying for the job.",
       error,
     });
   }
