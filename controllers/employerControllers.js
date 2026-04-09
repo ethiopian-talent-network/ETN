@@ -154,3 +154,23 @@ exports.postJobs = async (req, res) => {
     });
   }
 };
+
+exports.getAppliedJobs = async (req, res) => {
+  try {
+    const [appliedJobs] = await db.query(
+      "select a.cover_letter , u.name  , u.email from applications a join users u on a.id = u.id ",
+    );
+    if (!appliedJobs || appliedJobs.length === 0) {
+      return res.status(404).json({ message: "No applied jobs found" });
+    }
+
+    return res.status(200).json({ message: "Applied jobs", data: appliedJobs });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        message: "An unexpected error occurred while fetching applied jobs.",
+        error,
+      });
+  }
+};
