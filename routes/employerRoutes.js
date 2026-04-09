@@ -9,6 +9,9 @@ const {
   categories,
   postJobs,
   getAppliedJobs,
+  hireTalents,
+  shorListTalents,
+  getJobApplicantsForEmployer,
 } = require("../controllers/employerControllers");
 
 router.get(
@@ -30,6 +33,25 @@ router.get(
   authenticate,
   authorizeRole("employer"),
   getAppliedJobs,
+);
+
+router.post(
+  "/hireTalents",
+  authenticate,
+  authorizeRole("employer"),
+  hireTalents,
+);
+router.get(
+  "/shortlistedTalents",
+  authenticate,
+  authorizeRole("employer"),
+  shorListTalents,
+);
+router.get(
+  "/jobApplicants/:jobId",
+  authenticate,
+  authorizeRole("employer"),
+  getJobApplicantsForEmployer,
 );
 
 module.exports = router;
