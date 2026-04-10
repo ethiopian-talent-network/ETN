@@ -18,6 +18,8 @@ exports.createPayment = async (req, res) => {
       job_id,
       method,
     );
+  
+
 
     res.status(200).json(result);
   } catch (error) {
@@ -29,10 +31,14 @@ exports.createPayment = async (req, res) => {
 
 exports.verfiyTransaction = async (req, res) => {
   try {
-    const { tx_ref } = req.query;
-    const payment = await paymentServices.verfiyAndUpdateTransaction(tx_ref);
-    res.redirect("http://localhost:5000/payment-success");
+    const { tx_ref } = req.body;
+
+    if (!tx_ref) {
+      return res.status(400).json({ message: "tx_ref is required" });
+    }
+    await paymentServices.verfiyAndUpdateTransaction(tx_ref);
+    return res.status(200).json({ message: "your payment is successful" });
   } catch (error) {
-    res.redirect("http://localhost:3000/payment-failed");
+    return res.status(500).json({ message: error.message });
   }
 };
