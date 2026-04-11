@@ -107,7 +107,10 @@ exports.postJobs = async (req, res) => {
       experience_level,
       status,
       category_id,
+      token_cost
     } = req.body;
+
+    const user = req.user.id;
 
     if (
       !title ||
@@ -116,14 +119,15 @@ exports.postJobs = async (req, res) => {
       !budget_type ||
       !experience_level ||
       !status ||
-      !category_id
+      !category_id ||
+      !token_cost
     ) {
       return res.status(400).send({ message: "All fields are required" });
     }
 
     const [emploterRow] = await db.query(
       "select * from employers where user_id = ?",
-      [req.user.id],
+      [user],
     );
 
     if (emploterRow.length === 0) {
@@ -133,7 +137,7 @@ exports.postJobs = async (req, res) => {
     const employer_id = emploterRow[0].id;
 
     await db.query(
-      "insert into jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      "insert into jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id , token_cost) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         title,
         discription,
@@ -143,6 +147,7 @@ exports.postJobs = async (req, res) => {
         status,
         category_id,
         employer_id,
+        token_cost
       ],
     );
 

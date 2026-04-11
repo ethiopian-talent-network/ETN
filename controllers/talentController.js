@@ -268,6 +268,7 @@ exports.deletePortifolio = async (req, res) => {
 
 exports.applyForJob = async (req, res) => {
   const { cover_letter, job_id } = req.body;
+  const user = req.user.id;
 
   try {
     const sql = "select * from jobs where id =?";
@@ -280,28 +281,50 @@ exports.applyForJob = async (req, res) => {
     }
     const jobId = job[0];
 
+    const [jobRows] = await db.query(
+      "select token_cost from jobs where id = ?",
+      [jobId.id],
+    );
+
+    const takenCost = jobRows[0].token_cost;
+
+    const [tokenRows] = await db.query(
+      "select balance from tokens where talent_id =? for update",
+      [user],
+    );
+    if (tokenRows.length === 0 || tokenRows[0].balance < takenCost) {
+      return res.status(400).json({
+        message: "You don't have enough tokens to apply for this job",
+      });
+    }
     const sql3 =
       "select * from applications where jod_id = ? and talent_id = ?";
-    const [applicationExists] = await db.query(sql3, [jobId.id, req.user.id]);
+    const [applicationExists] = await db.query(sql3, [jobId.id, user]);
     if (applicationExists.length > 0) {
       return res.status(400).json({
         message: "You have already applied for this job",
       });
     }
 
+    const newBalance = tokenRows[0].balance - takenCost;
+
+    await db.query("update tokens set balance = ? where talent_id = ?", [
+      newBalance,
+      user,
+    ]);
+
+    await db.query(
+      "INSERT INTO token_transactions (talent_id , amount , type , reason) VALUES (? , ? , ? , ?)",
+      [user, takenCost, "debit", `applied for ${jobId.title}`],
+    );
     const sql2 =
       "insert into applications (jod_id , talent_id , cover_letter) values (? , ? , ?)";
-    const [application] = await db.query(sql2, [
-      jobId.id,
-      req.user.id,
-      cover_letter,
-    ]);
+    const [application] = await db.query(sql2, [jobId.id, user, cover_letter]);
     if (!application) {
       return res.status(500).json({
         message: "An unexpected error occurred while applying for the job.",
       });
     }
-
     return res.status(200).json({
       message: "Application submitted successfully",
       data: application,
@@ -309,6 +332,26 @@ exports.applyForJob = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "An unexpected error occurred while applying for the job.",
+      error,
+    });
+  }
+};
+
+exports.getMyTokens = async (req, res) => {
+  const user = req.user.id;
+
+  const connection = await db.getConnection();
+
+  try {
+    const [tokens] = await connection.query(
+      "SELECT balance FROM token WHERE talent_id = ? ",
+      [user],
+    );
+
+    return res.status(200).json({ balance: tokens[0]?.balance || 0 });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred while getting your tokens.",
       error,
     });
   }

@@ -12,6 +12,7 @@ const {
   updatePortifolio,
   deletePortifolio,
   applyForJob,
+  getMyTokens,
 } = require("../controllers/talentController");
 
 router.get(
@@ -56,5 +57,6 @@ router.delete(
 );
 
 router.post("/applyForJob", authenticate, authorizeRole("talent"), applyForJob);
+router.get("/tokeBalance", authenticate, authorizeRole("talent"), getMyTokens);
 
 module.exports = router;
