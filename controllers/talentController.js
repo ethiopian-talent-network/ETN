@@ -1,4 +1,5 @@
 const db = require("../config/db").promise();
+const { updateMonthlyToken } = require("../utils/tokenServices");
 
 exports.talentDashBoard = async (req, res) => {
   console.log("🔥 THIS CONTROLLER IS HIT");
@@ -344,9 +345,11 @@ exports.getMyTokens = async (req, res) => {
 
   try {
     const [tokens] = await connection.query(
-      "SELECT balance FROM token WHERE talent_id = ? ",
+      "SELECT balance FROM tokens WHERE talent_id = ? ",
       [user],
     );
+
+    await updateMonthlyToken(user);
 
     return res.status(200).json({ balance: tokens[0]?.balance || 0 });
   } catch (error) {

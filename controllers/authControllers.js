@@ -64,6 +64,7 @@ exports.signup = async (req, res) => {
       email: email,
       password: hashedPassword,
       role: role,
+      last_token_reset: role === "talent" ? new Date() : null,
     };
 
     const [results] = await connection.query(sql, values);
@@ -140,10 +141,10 @@ exports.verifyOTP = async (req, res) => {
     );
 
     if (user.role === "talent" || existingToken.length === 0) {
-      await db.query("insert into tokens (talent_id , balance) values(? , ?)", [
-        user.id,
-        100,
-      ]);
+      await db.query(
+        "insert into tokens (talent_id , balance , last_token_reset) values(? , ? , NOW())",
+        [user.id, 100],
+      );
       await db.query(
         "INSERT INTO token_transactions (talent_id, amount, type , reason) VALUES (?, ?, ?, ?)",
         [user.id, 100, "credit", "signup bonus"],
@@ -197,56 +198,64 @@ exports.resendOTP = async (req, res) => {
   });
 };
 
-exports.login = (req, res) => {
-  try {
-    const { email, password } = req.body;
+exports.login = async (req, res) => {
+  const connection = await db.getConnection();
+  const { email, password } = req.body;
 
+  try {
+    await connection.beginTransaction();
     const sql = "select * from users where email = ?";
 
-    db.query(sql, [email], async (error, results) => {
-      if (error) {
-        return res.status(500).json({
-          message: "Internal server error",
-        });
-      }
+    const [result] = await connection.query(sql, [email]);
 
-      const user = results[0];
-
-      if (!user) {
-        return res.status(404).json({
-          message: "User not found",
-        });
-      }
-      const Match = await bcrypt.compare(password, user.password);
-
-      if (!Match) {
-        return res.status(400).json({
-          message: "Invalid password",
-        });
-      }
-
-      if (!user.is_verified) {
-        return res.status(400).json({
-          message: "User not verified, please verify your email",
-        });
-      }
-      const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1h",
-        },
-      );
-
-      return res.status(200).json({
-        message: "User logged in successfully",
-        token,
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
       });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const user = result[0];
+
+    const Match = await bcrypt.compare(password, user.password);
+
+    if (!Match) {
+      return res.status(400).json({
+        message: "Invalid password",
+      });
+    }
+
+    if (!user.is_verified) {
+      return res.status(400).json({
+        message: "User not verified, please verify your email",
+      });
+    }
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    await connection.commit();
+
+    return res.status(200).json({
+      message: "User logged in successfully",
+      token,
     });
   } catch (error) {
+    await connection.rollback();
     return res.status(500).json({
       message: "Internal server error",
-      error,
+      error: error.message,
     });
+  } finally {
+    connection.release();
   }
 };
