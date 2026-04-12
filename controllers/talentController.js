@@ -4,7 +4,6 @@ const { updateMonthlyToken } = require("../utils/tokenServices");
 exports.talentDashBoard = async (req, res) => {
   console.log("🔥 THIS CONTROLLER IS HIT");
   const {
-    skills,
     education,
     experience,
     languages,
@@ -13,9 +12,7 @@ exports.talentDashBoard = async (req, res) => {
     github,
     resume_url,
   } = req.body;
-  if (!skills) {
-    return res.status(400).send({ message: "Skills are required" });
-  }
+
   try {
     const query = "SELECT * FROM talents where user_id = ?";
     const [row0] = await db.query(query, [req.user.id]);
@@ -26,7 +23,6 @@ exports.talentDashBoard = async (req, res) => {
 
     const values = {
       user_id: req.user.id,
-      skills,
       education,
       experience,
       languages,
@@ -52,25 +48,111 @@ exports.talentDashBoard = async (req, res) => {
     });
   }
 };
-
 exports.talentProfile = async (req, res) => {
-  const fetchQuery =
-    "select u.name , u.email , t.skills , t.education , t.experience , t.languages , t.linkedin , t.github , t.resume_url from talents t join users u on t.user_id = u.id where t.user_id = ?";
-
   try {
+    const fetchQuery = `
+      SELECT
+        u.name,
+        u.email,
+        t.education,
+        t.experience,
+        t.languages,
+        t.linkedin,
+        t.github,
+        t.resume_url,
+        GROUP_CONCAT(s.skill_name) AS skill_names
+      FROM talents t
+      JOIN users u ON t.user_id = u.id
+      LEFT JOIN talent_skills ts ON t.id = ts.talent_id
+      LEFT JOIN skills s ON ts.skill_id = s.id
+      WHERE t.user_id = ?
+      GROUP BY t.id, u.id;
+    `;
+
     const [rows] = await db.query(fetchQuery, [req.user.id]);
 
     if (rows.length === 0) {
       return res.status(404).send({ message: "Talent profile not found" });
     }
 
-    return res.status(200).send({ message: "Talent profile", data: rows[0] });
+    const profile = rows[0];
+    profile.skills = profile.skill_names ? profile.skill_names.split(",") : [];
+
+    delete profile.skill_names;
+
+    return res.status(200).send({ message: "Talent profile", data: profile });
   } catch (error) {
-    console.error(error);
+    console.error("Fetch Profile Error:", error);
     return res.status(500).send({
       message: "An unexpected error occurred while fetching your profile.",
+      error: error.message,
+    });
+  }
+};
+
+const addSkill = async (connection, talent_id, skill_name) => {
+  try {
+    await connection.beginTransaction();
+
+    const [skills] = await connection.query(
+      "select id from skills where skill_name = ?",
+      [skill_name],
+    );
+
+    let skillID;
+    if (skills.length > 0) {
+      skillID = skills[0].id;
+    } else {
+      const [newSkill] = await connection.query(
+        "INSERT INTO skills (skill_name) VALUES (?)",
+        [skill_name],
+      );
+      skillID = newSkill.insertId;
+    }
+
+    await connection.query(
+      "INSERT IGNORE INTO talent_skills (talent_id, skill_id) VALUES (?, ?)",
+      [talent_id, skillID],
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+exports.addSkills = async (req, res) => {
+  const { skill_name } = req.body;
+  const user = req.user.id;
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [talent] = await connection.query(
+      "select id from talents where user_id = ?",
+      [user],
+    );
+    if (talent.length === 0) {
+      return res.status(201).json("add your profile first");
+    }
+
+    const talent_id = talent[0].id;
+
+    await addSkill(connection, talent_id, skill_name);
+    await connection.commit();
+
+    return res.status(200).send({ message: "Skill added successfully" });
+  } catch (error) {
+    await connection.rollback();
+    return res.status(500).json({
+      message: "unexpected error occurred while adding skill function",
       error,
     });
+  } finally {
+    connection.release();
   }
 };
 

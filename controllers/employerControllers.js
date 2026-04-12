@@ -98,6 +98,7 @@ exports.categories = async (req, res) => {
 };
 
 exports.postJobs = async (req, res) => {
+  const connection = await db.getConnection();
   try {
     const {
       title,
@@ -107,37 +108,34 @@ exports.postJobs = async (req, res) => {
       experience_level,
       status,
       category_id,
-      token_cost
+      token_cost,
+      skill_names,
     } = req.body;
 
     const user = req.user.id;
 
-    if (
-      !title ||
-      !discription ||
-      !salary ||
-      !budget_type ||
-      !experience_level ||
-      !status ||
-      !category_id ||
-      !token_cost
-    ) {
-      return res.status(400).send({ message: "All fields are required" });
+    if (!title || !discription || !salary || !skill_names) {
+      return res
+        .status(400)
+        .send({ message: "Required fields (including skills) are missing" });
     }
 
-    const [emploterRow] = await db.query(
-      "select * from employers where user_id = ?",
+    await connection.beginTransaction();
+
+    const [employerRow] = await connection.query(
+      "SELECT id FROM employers WHERE user_id = ?",
       [user],
     );
 
-    if (emploterRow.length === 0) {
-      return res.status(404).send({ message: "Employer not found" });
+    if (employerRow.length === 0) {
+      await connection.rollback();
+      return res.status(404).send({ message: "Employer profile not found" });
     }
 
-    const employer_id = emploterRow[0].id;
+    const employer_id = employerRow[0].id;
 
-    await db.query(
-      "insert into jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id , token_cost) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    const [jobResult] = await connection.query(
+      "INSERT INTO jobs (title, discription, salary, budget_type, experience_level, status, category_id, employer_id, token_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         title,
         discription,
@@ -147,16 +145,48 @@ exports.postJobs = async (req, res) => {
         status,
         category_id,
         employer_id,
-        token_cost
+        token_cost,
       ],
     );
 
-    return res.status(201).send({ message: "Job posted successfully" });
+    const job_id = jobResult.insertId;
+
+    for (const name of skill_names) {
+      if (!name) continue;
+      let [skillRows] = await connection.query(
+        "SELECT id FROM skills WHERE skill_name = ?",
+        [name],
+      );
+      let skillId;
+
+      if (skillRows.length > 0) {
+        skillId = skillRows[0].id;
+      } else {
+        const [newSkill] = await connection.query(
+          "INSERT INTO skills (skill_name) VALUES (?)",
+          [name],
+        );
+        skillId = newSkill.insertId;
+      }
+
+      await connection.query(
+        "INSERT IGNORE INTO job_skills (job_id, skill_id) VALUES (?, ?)",
+        [job_id, skillId],
+      );
+    }
+
+    await connection.commit();
+    return res
+      .status(201)
+      .send({ message: "Job and requirements posted successfully" });
   } catch (error) {
-    return res.status(500).send({
-      message: "An unexpected error occurred while posting the job.",
-      error,
-    });
+    await connection.rollback();
+    console.error(error);
+    return res
+      .status(500)
+      .send({ message: "Unexpected error occurred", error: error.message });
+  } finally {
+    connection.release();
   }
 };
 
