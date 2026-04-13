@@ -7,8 +7,11 @@ const {
   employerProfile,
   employerDashboard,
   categories,
-  postJobs
-
+  postJobs,
+  getAppliedJobs,
+  hireTalents,
+  shorListTalents,
+  getJobApplicantsForEmployer,
 } = require("../controllers/employerControllers");
 
 router.get(
@@ -25,5 +28,30 @@ router.post(
 );
 router.get("/categories", categories);
 router.post("/postJobs", authenticate, authorizeRole("employer"), postJobs);
+router.get(
+  "/appliedJobs",
+  authenticate,
+  authorizeRole("employer"),
+  getAppliedJobs,
+);
+
+router.post(
+  "/hireTalents",
+  authenticate,
+  authorizeRole("employer"),
+  hireTalents,
+);
+router.get(
+  "/shortlistedTalents",
+  authenticate,
+  authorizeRole("employer"),
+  shorListTalents,
+);
+router.get(
+  "/jobApplicants/:jobId",
+  authenticate,
+  authorizeRole("employer"),
+  getJobApplicantsForEmployer,
+);
 
 module.exports = router;

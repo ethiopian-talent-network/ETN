@@ -11,6 +11,7 @@ const {
   getPortifolio,
   updatePortifolio,
   deletePortifolio,
+  applyForJob,
 } = require("../controllers/talentController");
 
 router.get(
@@ -42,15 +43,18 @@ router.post(
   createPortifolio,
 );
 router.patch(
-  "/portifolio/:id",
+  "/updatePortifolio",
   authenticate,
   authorizeRole("talent"),
   updatePortifolio,
 );
 router.delete(
-  "/portifolio/:id",
+  "/deletePortifolio",
   authenticate,
   authorizeRole("talent"),
   deletePortifolio,
 );
+
+router.post("/applyForJob", authenticate, authorizeRole("talent"), applyForJob);
+
 module.exports = router;

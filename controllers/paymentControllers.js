@@ -8,7 +8,7 @@ exports.createPayment = async (req, res) => {
 
     const [rows] = await db.query("SELECT * FROM jobs WHERE id = ?", [job_id]);
     if (rows.length === 0) {
-      return res.status(400).json({ message: "jod is not found" });
+      return res.status(400).json({ message: "job is not found" });
     }
 
     const result = await paymentServices.createPayment(
@@ -23,7 +23,6 @@ exports.createPayment = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: error.message,
-      context: "just the controller is wrong",
     });
   }
 };
