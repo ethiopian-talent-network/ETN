@@ -1,5 +1,8 @@
 const db = require("../config/db").promise();
 const { updateMonthlyToken } = require("../utils/tokenServices");
+const {
+  sendConnectionNotification,
+} = require("../utils/sendConnectionNotification");
 
 exports.talentDashBoard = async (req, res) => {
   console.log("🔥 THIS CONTROLLER IS HIT");
@@ -438,6 +441,122 @@ exports.getMyTokens = async (req, res) => {
     return res.status(500).json({
       message: "An unexpected error occurred while getting your tokens.",
       error,
+    });
+  }
+};
+
+exports.sendRequest = async (req, res) => {
+  const { receiver_id } = req.body;
+  const user = req.user.id;
+
+  try {
+    const [sender] = await db.query(
+      "SELECT t.id, u.name FROM talents t JOIN users u ON t.user_id = u.id WHERE u.id = ?",
+      [user],
+    );
+
+    if (sender.length === 0 || !sender[0]) {
+      return res.status(404).json({
+        message: "Sender not found",
+      });
+    }
+
+    const [receiver] = await db.query(
+      "select u.name, u.email from talents t join users u on t.user_id = u.id where t.id = ?",
+      [receiver_id],
+    );
+
+    if (receiver.length === 0 || !receiver[0]) {
+      return res.status(404).json({
+        message: "Receiver not found",
+      });
+    }
+
+    const sender_id = sender[0].id;
+
+    if (sender_id === parseInt(receiver_id)) {
+      return res.status(400).json({
+        message: "You cannot connect to yourself",
+      });
+    }
+
+    await db.query(
+      "INSERT INTO connections (sender_id, reciver_id) VALUES (?, ?)",
+      [sender_id, receiver_id],
+    );
+
+    sendConnectionNotification(
+      receiver[0].email,
+      receiver[0].name,
+      sender[0].name,
+    );
+
+    return res.status(200).json({ message: "Request sent successfully" });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({
+        message: "You have already sent a connection request to this user",
+      });
+    }
+
+    return res.status(500).json({
+      message: "An unexpected error occurred while sending request.",
+      error: error.message,
+    });
+  }
+};
+
+exports.getRequestedConnections = async (req, res) => {
+  const user = req.user.id;
+
+  try {
+    const [talent] = await db.query("select * from users where id = ? ", [
+      user,
+    ]);
+
+    const reciver_id = talent[0].id;
+
+    const [connections] = await db.query(
+      "select * from connections where reciver_id = ? and status = 'pending'",
+      [reciver_id],
+    );
+
+    return res.status(200).json({ connections });
+  } catch (error) {
+    return res.status(500).json({
+      message:
+        "An unexpected error occurred while getting requested connections.",
+      error,
+    });
+  }
+};
+
+exports.acceptRequest = async (req, res) => {
+  const { connection_id } = req.body;
+  const user = req.user.id;
+
+  try {
+    const [talent_id] = await db.query(
+      "SELECT t.id FROM talents t JOIN users u WHERE t.user_id = u.id",
+      [user],
+    );
+    const my_id = talent_id[0].id;
+   
+    const [rows] = await db.query(
+      "update connections set status = 'accepted' where id = ? and reciver_id = ?",
+      [connection_id, my_id],
+    );
+    if (rows.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "unauthorized to accept this request" });
+    }
+
+    return res.status(200).json({ message: "Request accepted successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred while accepting request.",
+      error: error.message,
     });
   }
 };

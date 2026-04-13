@@ -13,7 +13,10 @@ const {
   deletePortifolio,
   applyForJob,
   getMyTokens,
-  addSkills
+  addSkills,
+  sendRequest,
+  acceptRequest,
+  getRequestedConnections,
 } = require("../controllers/talentController");
 
 const { getRecommendedJobs } = require("../utils/recommendationServices");
@@ -62,6 +65,24 @@ router.delete(
 router.post("/applyForJob", authenticate, authorizeRole("talent"), applyForJob);
 router.get("/tokeBalance", authenticate, authorizeRole("talent"), getMyTokens);
 router.post("/addSkills", authenticate, authorizeRole("talent"), addSkills);
-router.get("/recommendedJobs", authenticate, authorizeRole("talent"), getRecommendedJobs);
+router.get(
+  "/recommendedJobs",
+  authenticate,
+  authorizeRole("talent"),
+  getRecommendedJobs,
+);
+router.post("/sendRequest", authenticate, authorizeRole("talent"), sendRequest);
+router.post(
+  "/acceptRequest",
+  authenticate,
+  authorizeRole("talent"),
+  acceptRequest,
+);
+router.get(
+  "/requestedConnections",
+  authenticate,
+  authorizeRole("talent"),
+  getRequestedConnections,
+);
 
 module.exports = router;
