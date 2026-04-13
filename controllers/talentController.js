@@ -513,7 +513,7 @@ exports.getRequestedConnections = async (req, res) => {
     const [talent] = await db.query("select * from users where id = ? ", [
       user,
     ]);
-
+    
     const reciver_id = talent[0].id;
 
     const [connections] = await db.query(
@@ -541,7 +541,7 @@ exports.acceptRequest = async (req, res) => {
       [user],
     );
     const my_id = talent_id[0].id;
-   
+
     const [rows] = await db.query(
       "update connections set status = 'accepted' where id = ? and reciver_id = ?",
       [connection_id, my_id],
