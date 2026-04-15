@@ -513,7 +513,7 @@ exports.getRequestedConnections = async (req, res) => {
     const [talent] = await db.query("select * from users where id = ? ", [
       user,
     ]);
-    
+
     const reciver_id = talent[0].id;
 
     const [connections] = await db.query(
@@ -560,3 +560,8 @@ exports.acceptRequest = async (req, res) => {
     });
   }
 };
+
+exports.talentsMessaging = async (req ,res) => {
+
+  const {context} = req.bo
+}
