@@ -1,17 +1,18 @@
-import { useState } from 'react'
-
+import { BrowserRouter, Routes, Route } from "react-router";
+import Login from "./pages/login";
+import Signup from "./pages/signup";
+import Landing from "./pages/landing";
 
 function App() {
-
   return (
-  <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <h1 className="text-4xl font-bold text-green-600 underline">
-        ETN Frontend Ready!
-      </h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
-
-
+export default App;

@@ -5,35 +5,85 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
 
-export default function Login() {
+export default function Signup() {
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [userType, setUserType] = useState<"employer" | "talent">("talent");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login:", { email, password });
+
+    if (password !== confirmPassword) {
+      console.log("Passwords do not match");
+      return;
+    }
+
+    console.log("Signup:", {
+      firstName,
+      email,
+      password,
+      confirmPassword,
+      userType,
+    });
   };
 
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-8">
             <h1 className="text-[#0084ca] font-bold text-3xl">ETN</h1>
-            <p className="text-sm text-gray-600 mt-1">Ethiopian Talent Network</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Ethiopian Talent Network
+            </p>
           </div>
 
           {/* Title */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-2xl font-medium text-gray-900 mb-2">
-              Log in to ETN
+              Sign up to find work you love
             </h2>
           </div>
 
-          {/* Social Login Buttons */}
+          {/* User Type Selection */}
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setUserType("talent")}
+                className={`p-4 border-2 rounded-lg text-left transition-all ${
+                  userType === "talent"
+                    ? "border-[#0084ca] bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className="font-medium text-gray-900">I'm a talents</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Looking for work
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType("employer")}
+                className={`p-4 border-2 rounded-lg text-left transition-all ${
+                  userType === "employer"
+                    ? "border-[#0084ca] bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className="font-medium text-gray-900">I'm a employer</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Hiring for a project
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Social Sign Up Buttons */}
           <div className="space-y-3 mb-6">
             <Button
               variant="outline"
@@ -64,16 +114,6 @@ export default function Login() {
               variant="outline"
               className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700"
             >
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="#0A66C2">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-              </svg>
-              Continue with LinkedIn
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700"
-            >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="#000">
                 <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
               </svg>
@@ -89,10 +129,33 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Signup Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label
+                  htmlFor="firstName"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Name
+                </Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="mt-1.5 h-12 border-gray-300"
+                  placeholder="Name"
+                  required
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
+              >
                 Email
               </Label>
               <Input
@@ -107,50 +170,105 @@ export default function Login() {
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700"
+              >
+                Password (8 or more characters)
               </Label>
               <Input
                 id="password"
+                autoComplete="current-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1.5 h-12 border-gray-300"
                 placeholder="Password"
+                minLength={8}
                 required
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 text-[#0084ca] focus:ring-[#0084ca] border-gray-300 rounded"
-                />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
-                  Keep me logged in
-                </label>
-              </div>
-              <button type="button" className="text-sm text-[#0084ca] hover:underline">
-                Forgot password?
-              </button>
+            <div>
+              <Label
+                htmlFor="country"
+                className="text-sm font-medium text-gray-700"
+              >
+                confirm your Password
+              </Label>
+              <Input
+                id="passwordConfirm"
+                type="password"
+                autoComplete="current-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1.5 h-12 border-gray-300"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+
+            <div className="flex items-start pt-2">
+              <input
+                id="updates"
+                type="checkbox"
+                className="h-4 w-4 text-[#0084ca] focus:ring-[#0084ca] border-gray-300 rounded mt-0.5"
+              />
+              <label htmlFor="updates" className="ml-2 text-sm text-gray-600">
+                Send me helpful emails to find rewarding work and job leads
+              </label>
+            </div>
+
+            <div className="flex items-start">
+              <input
+                id="terms"
+                type="checkbox"
+                className="h-4 w-4 text-[#0084ca] focus:ring-[#0084ca] border-gray-300 rounded mt-0.5"
+                required
+              />
+              <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+                Yes, I understand and agree to the{" "}
+                <button
+                  type="button"
+                  className="text-[#0084ca] hover:underline"
+                >
+                  ETN Terms of Service
+                </button>
+                , including the{" "}
+                <button
+                  type="button"
+                  className="text-[#0084ca] hover:underline"
+                >
+                  User Agreement
+                </button>{" "}
+                and{" "}
+                <button
+                  type="button"
+                  className="text-[#0084ca] hover:underline"
+                >
+                  Privacy Policy
+                </button>
+                .
+              </label>
             </div>
 
             <Button
               type="submit"
               className="w-full h-12 bg-[#0084ca] hover:bg-[#006ba6] text-white font-medium rounded-full"
             >
-              Log in
+              Create my account
             </Button>
           </form>
 
-          {/* Sign up link */}
-          <div className="mt-8 text-center">
+          {/* Login link */}
+          <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an ETN account?{" "}
-              <Link to="/signup" className="text-[#0084ca] hover:underline font-medium">
-                Sign Up
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-[#0084ca] hover:underline font-medium"
+              >
+                Log In
               </Link>
             </p>
           </div>
@@ -161,29 +279,76 @@ export default function Login() {
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#0084ca] to-[#006ba6] items-center justify-center p-12">
         <div className="text-white max-w-lg">
           <h2 className="text-4xl font-bold mb-6">
-            Find great talent
+            Join the Ethiopian's work marketplace
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Work with the largest network of independent professionals and get things done—from quick turnarounds to big transformations.
+            Find great talent. Build your business. Take your career to the next
+            level.
           </p>
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <div>
+              <div className="text-3xl font-bold mb-1">5M+</div>
+              <div className="text-sm text-white/80">Clients</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold mb-1">$3.8B+</div>
+              <div className="text-sm text-white/80">Paid out</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold mb-1">$1B+</div>
+              <div className="text-sm text-white/80">In earnings</div>
+            </div>
+          </div>
           <div className="space-y-4">
             <div className="flex items-start">
-              <svg className="w-6 h-6 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 mr-3 mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <p className="text-lg">Proof of quality with every talent profile</p>
+              <p className="text-lg">Post a job and hire top talent</p>
             </div>
             <div className="flex items-start">
-              <svg className="w-6 h-6 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 mr-3 mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <p className="text-lg">Safe and secure payments</p>
+              <p className="text-lg">
+                Find opportunities for every stage of your freelance career
+              </p>
             </div>
             <div className="flex items-start">
-              <svg className="w-6 h-6 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 mr-3 mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <p className="text-lg">24/7 support</p>
+              <p className="text-lg">Control when, where, and how you work</p>
             </div>
           </div>
         </div>
